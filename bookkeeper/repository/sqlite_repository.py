@@ -80,11 +80,15 @@ class SQLiteRepository(AbstractRepository[T]):
             names = ', '.join(self.fields.keys())
             filler = ', '.join("?" * len(self.fields))
             values = [getattr(obj, x) for x in self.fields]
-            cur.execute(
-                f'UPDATE {self.table_name} SET ({names}) = ({filler})' +
-                f'WHERE rowid = {obj.pk}',
-                values
-            )
+            try:
+                cur.execute(
+                    f'UPDATE {self.table_name} SET ({names}) = ({filler})' +
+                    f'WHERE rowid = {obj.pk}',
+                    values
+                )
+            except sqlite3.OperationalError as exc:
+                print(exc)
+                print('Записи ещё не существует')
             if obj.pk is None:
                 raise TypeError
         con.close()
@@ -96,6 +100,12 @@ class SQLiteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'DELETE FROM {self.table_name} WHERE rowid = {pk}')
-
+            try:
+                cur.execute(f'DELETE FROM {self.table_name} WHERE rowid = {pk}')
+                if cur.rowcount == 0:
+                    raise KeyError('Записи не существует')
+            except sqlite3.OperationalError as exc:
+                print(exc)
+                print('Записи ещё не существует')
         con.close()
+
