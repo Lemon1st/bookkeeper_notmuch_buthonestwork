@@ -71,9 +71,31 @@ class SQLiteRepository(AbstractRepository[T]):
         return res
 
     def update(self, obj: T) -> None:
-        """ Обновить данные об объекте. Объект должен содержать поле pk. """
-        pass
+        """
+        Обновление записи
+        """
+        with sqlite3.connect(self.db_file) as con:
+            cur = con.cursor()
+            cur.execute('PRAGMA foreign_keys = ON')
+            names = ', '.join(self.fields.keys())
+            filler = ', '.join("?" * len(self.fields))
+            values = [getattr(obj, x) for x in self.fields]
+            cur.execute(
+                f'UPDATE {self.table_name} SET ({names}) = ({filler})' +
+                f'WHERE rowid = {obj.pk}',
+                values
+            )
+            if obj.pk is None:
+                raise TypeError
+        con.close()
 
     def delete(self, pk: int) -> None:
-        """ Удалить запись """
-        pass
+        """
+        Удаление записи
+        """
+        with sqlite3.connect(self.db_file) as con:
+            cur = con.cursor()
+            cur.execute('PRAGMA foreign_keys = ON')
+            cur.execute(f'DELETE FROM {self.table_name} WHERE rowid = {pk}')
+
+        con.close()
