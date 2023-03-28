@@ -33,3 +33,47 @@ class Generic_Table(QtWidgets.QWidget):
         self.update_button = QtWidgets.QPushButton('Изменить запись')
         self.update_button.clicked.connect(self.update_menu)
         self.layout.addWidget(self.update_button, 0, 3, 1, 1)
+        # Создание заголовков таблиц при считывании категорий
+        try:
+            self.exp_tabl = QtWidgets.QTableWidget(20, len(self.repo.fields) + 1)
+            names = ', '.join(self.repo.fields.keys())
+            for i, element in enumerate(names.split(',')):
+                self.exp_tabl.setHorizontalHeaderItem(
+                    i, QtWidgets.QTableWidgetItem(element)
+                )
+            self.exp_tabl.setHorizontalHeaderItem(
+                len(self.repo.fields),
+                QtWidgets.QTableWidgetItem('PK')
+            )
+            self.layout.addWidget(self.exp_tabl, 1, 0, 1, 60)
+            self.setLayout(self.layout)
+        except AttributeError as err:
+            print('Невозможно получить атрибут', err)
+        self.dialog = QtWidgets.QDialog()
+        self.table_widgets = []
+
+    def add_data(self, data: list) -> None:
+        """
+        Заполнение таблицы элементами, вспомогательная функция
+        """
+        for ii, row in enumerate(data):
+            for jj, x in enumerate(row):
+                self.exp_tabl.setItem(
+                    ii, jj,
+                    QtWidgets.QTableWidgetItem(str(x))
+                )
+                self.exp_tabl.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+
+    def refresh_click(self) -> None:
+        """
+        Функция, реализующее обновление элементов при
+        нажатии на кнопку обновления
+        """
+        result = self.repo.get_all()
+        add_table = []
+        for element in result:
+            values = [getattr(element, x) for x in self.repo.fields]
+            values.append(getattr(element, 'pk'))
+            add_table.append(values)
+        self.exp_tabl.clearContents()
+        self.add_data(add_table)

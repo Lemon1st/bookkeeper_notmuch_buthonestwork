@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, Protocol, Any
 
 
-class Model(Protocol):  # pylint: disable=too-few-public-methods
+class Model(Protocol):
     """
     Модель должна содержать атрибут pk
     """
@@ -31,6 +31,8 @@ class AbstractRepository(ABC, Generic[T]):
     update
     delete
     """
+    cls: type
+    fields: dict[str, Any]
 
     @abstractmethod
     def add(self, obj: T) -> int:
