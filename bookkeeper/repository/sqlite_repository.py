@@ -9,6 +9,24 @@ from bookkeeper.repository.abstract_repository import AbstractRepository, T
 from typing import Any
 
 
+def table_converter(fields: dict[str, Any]) -> str:
+    """
+    Вспомогательная функция, форматирующая
+    запросы sql
+    """
+    result = '('
+    for key, value in fields.items():
+        result += key
+        if 'str' in str(value):
+            result += ' TEXT'
+        if 'int' in str(value):
+            result += ' INTEGER'
+        if 'datetime' in str(value):
+            result += ' DATETIME'
+        result += ', '
+    return result[:-2] + ')'
+
+
 class SQLiteRepository(AbstractRepository[T]):
     def __init__(self, db_file: str, cls: type) -> None:
         self.fields = get_annotations(cls, eval_str=True)
@@ -19,23 +37,6 @@ class SQLiteRepository(AbstractRepository[T]):
         self.filler = ', '.join("?" * len(self.fields))
         self.cls = cls
 
-    def table_converter(self, fields: dict[str, Any]) -> str:
-        """
-        Вспомогательная функция, форматирующая
-        запросы sql
-        """
-        result = '('
-        for key, value in fields.items():
-            result += key
-            if 'str' in str(value):
-                result += ' TEXT'
-            if 'int' in str(value):
-                result += ' INTEGER'
-            if 'datetime' in str(value):
-                result += ' DATETIME'
-            result += ', '
-        return result[:-2] + ')'
-
     def add(self, obj: T) -> int:
         values = [getattr(obj, x) for x in self.fields]
         with sqlite3.connect(self.db_file) as con:
@@ -43,7 +44,7 @@ class SQLiteRepository(AbstractRepository[T]):
             cur.execute('PRAGMA foreign_keys = ON')
             cur.execute(
                 f'CREATE TABLE IF NOT EXISTS {self.table_name} ' +
-                self.table_converter(self.fields)
+                table_converter(self.fields)
             )
             cur.execute(
                 f'INSERT INTO {self.table_name} ({self.names}) VALUES ({self.filler})',
@@ -154,3 +155,17 @@ class SQLiteRepository(AbstractRepository[T]):
                 print('Записи ещё не существует')
         con.close()
 
+    def delete_all(self) -> None:
+        """
+        Полная очистка базы данных
+        Удаление всех элементов
+        """
+        with sqlite3.connect(self.db_file) as con:
+            cur = con.cursor()
+            cur.execute('PRAGMA foreign_keys = ON')
+            try:
+                cur.executescript(f'DROP TABLE IF EXISTS {self.table_name};')
+            except sqlite3.OperationalError as exc:
+                print(exc)
+                print('Элементов ещё нет')
+        con.close()
