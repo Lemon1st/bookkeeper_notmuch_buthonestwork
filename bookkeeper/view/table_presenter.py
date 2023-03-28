@@ -79,6 +79,12 @@ class Generic_Table(QtWidgets.QWidget):
         self.exp_tabl.clearContents()
         self.add_data(add_table)
 
+    def cancel(self) -> None:
+        """
+        Закрытие диалогового окна или отмена
+        """
+        self.dialog.close()
+
     def add_menu(self) -> None:
         """
         Меню и кнопки, добавляющие элемент
@@ -98,8 +104,11 @@ class Generic_Table(QtWidgets.QWidget):
             layout.addWidget(QtWidgets.QLabel(str(element)), i, 0)
             layout.addWidget(self.table_widgets[-1], i, 1)
         add = QtWidgets.QPushButton('Добавить')
+        cancel = QtWidgets.QPushButton('Отменить')
+        cancel.clicked.connect(self.cancel)
         add.clicked.connect(self.add_click)
-        layout.addWidget(add, len(self.repo.fields) + 1, 0)
+        layout.addWidget(add, len(self.repo.fields)+1, 0)
+        layout.addWidget(cancel, len(self.repo.fields)+1, 1)
         self.dialog.setLayout(layout)
         self.dialog.setWindowTitle('Добавить запись')
         self.dialog.exec()
