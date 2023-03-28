@@ -6,6 +6,7 @@
 
 from PySide6 import QtWidgets
 from bookkeeper.repository.abstract_repository import AbstractRepository, T
+from PySide6.QtCore import QDateTime
 
 
 class Generic_Table(QtWidgets.QWidget):
@@ -77,3 +78,28 @@ class Generic_Table(QtWidgets.QWidget):
             add_table.append(values)
         self.exp_tabl.clearContents()
         self.add_data(add_table)
+
+    def add_menu(self) -> None:
+        """
+        Меню и кнопки, добавляющие элемент
+        """
+        self.dialog = QtWidgets.QDialog()
+        layout = QtWidgets.QGridLayout()
+        self.table_widgets = []
+        for i, element in enumerate(self.repo.fields):
+            if element == 'category':
+                self.table_widgets.append(QtWidgets.QComboBox())
+                self.set_categories()
+            elif 'date' in element:
+                self.table_widgets.append(QtWidgets.QDateTimeEdit())
+                self.table_widgets[-1].setDateTime(QDateTime.currentDateTime())
+            else:
+                self.table_widgets.append(QtWidgets.QLineEdit())
+            layout.addWidget(QtWidgets.QLabel(str(element)), i, 0)
+            layout.addWidget(self.table_widgets[-1], i, 1)
+        add = QtWidgets.QPushButton('Добавить')
+        add.clicked.connect(self.add_click)
+        layout.addWidget(add, len(self.repo.fields) + 1, 0)
+        self.dialog.setLayout(layout)
+        self.dialog.setWindowTitle('Добавить запись')
+        self.dialog.exec()
