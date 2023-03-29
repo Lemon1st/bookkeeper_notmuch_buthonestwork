@@ -107,8 +107,76 @@ class Generic_Table(QtWidgets.QWidget):
         cancel = QtWidgets.QPushButton('Отменить')
         cancel.clicked.connect(self.cancel)
         add.clicked.connect(self.add_click)
-        layout.addWidget(add, len(self.repo.fields)+1, 0)
-        layout.addWidget(cancel, len(self.repo.fields)+1, 1)
+        layout.addWidget(add, len(self.repo.fields) + 1, 0)
+        layout.addWidget(cancel, len(self.repo.fields) + 1, 1)
         self.dialog.setLayout(layout)
         self.dialog.setWindowTitle('Добавить запись')
         self.dialog.exec()
+
+    def set_categories(self) -> None:
+        """
+        Стартовый пресет категорий
+        """
+        self.table_widgets[-1].addItem('книги')
+        self.table_widgets[-1].addItem('мясо')
+        self.table_widgets[-1].addItem('одежда')
+        self.table_widgets[-1].addItem('сырое мясо')
+        self.table_widgets[-1].addItem('сладости')
+
+    def add_click(self) -> None:
+        """
+        Функция, реализующее добавления элементов при
+        нажатии на кнопку добавления
+        """
+        add_table = []
+        for element in self.table_widgets:
+            if isinstance(element, QtWidgets.QDateTimeEdit):
+                try:
+                    add_table.append(element.dateTime().toPython())
+                except AttributeError as err:
+                    print(err)
+            else:
+                try:
+                    add_table.append(int(element.text()))
+                except AttributeError:
+                    add_table.append(element.currentText())
+                except ValueError:
+                    add_table.append(element.text())
+        self.repo.add(self.repo.cls(*add_table))
+        self.refresh_click()
+        self.dialog.close()
+
+    def del_menu(self) -> None:
+        """
+        Меню, открывающееся при выборе опции
+        удаления
+        """
+        self.dialog = QtWidgets.QDialog()
+        self.table_widgets = []
+        layout = QtWidgets.QGridLayout()
+        self.table_widgets.append(QtWidgets.QLabel('PK'))
+        layout.addWidget(self.table_widgets[-1], 0, 0)
+        self.table_widgets.append(QtWidgets.QLineEdit())
+        layout.addWidget(self.table_widgets[-1], 0, 1)
+        add = QtWidgets.QPushButton('Применить')
+        cancel = QtWidgets.QPushButton('Отменить')
+        cancel.clicked.connect(self.cancel)
+        add.clicked.connect(self.del_click)
+        layout.addWidget(add, 1, 0)
+        layout.addWidget(cancel, 1, 1)
+        self.dialog.setLayout(layout)
+        self.dialog.setWindowTitle('Удалить запись')
+        self.dialog.exec()
+
+    def del_click(self) -> None:
+        """
+        Функция, реализующее удаление элементов при
+        нажатии на кнопку удаления
+        """
+        try:
+            self.repo.delete(int(self.table_widgets[-1].text()))
+        except AttributeError as err:
+            print('Невозможно удалить запись', err)
+        finally:
+            self.refresh_click()
+            self.dialog.close()
