@@ -1,7 +1,7 @@
 """
 Итоговый графический интерфейс с модульной реализацией
 К основному окну подключаются таблицы соответствующих модулей
-Модули сделаны по аналогии друг с другом с 
+Модули сделаны по аналогии друг с другом с
 учетом характерных особенностей задач
 """
 from PySide6 import QtWidgets
@@ -33,4 +33,3 @@ class GUI(QtWidgets.QWidget):
         self.table3 = Generic_Table(category_db, 'Категории расходов')
         self.layout.addWidget(self.table3)
         self.table3.refresh_click()
-

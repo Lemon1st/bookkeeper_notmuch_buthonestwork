@@ -241,4 +241,3 @@ class Generic_Table(QtWidgets.QWidget):
         self.repo.update(self.repo.cls(*add_table))
         self.refresh_click()
         self.dialog.close()
-
