@@ -180,3 +180,65 @@ class Generic_Table(QtWidgets.QWidget):
         finally:
             self.refresh_click()
             self.dialog.close()
+
+    def update_menu(self) -> None:
+        """
+        Обновление списка с выпадением списка, опциями или меню
+        """
+        self.dialog = QtWidgets.QDialog()
+        layout = QtWidgets.QGridLayout()
+        self.table_widgets = []
+        for i, element in enumerate(self.repo.fields):
+            if element == 'category':
+                self.table_widgets.append(QtWidgets.QComboBox())
+                self.table_widgets[-1].addItem('книги')
+                self.table_widgets[-1].addItem('мясо')
+                self.table_widgets[-1].addItem('одежда')
+                self.table_widgets[-1].addItem('сырое мясо')
+                self.table_widgets[-1].addItem('сладости')
+            elif 'date' in element:
+                self.table_widgets.append(QtWidgets.QDateTimeEdit())
+                self.table_widgets[-1].setDateTime(QDateTime.currentDateTime())
+            else:
+                self.table_widgets.append(QtWidgets.QLineEdit())
+            layout.addWidget(QtWidgets.QLabel(str(element)), i, 0)
+            layout.addWidget(self.table_widgets[-1], i, 1)
+        self.table_widgets.append(QtWidgets.QLineEdit())
+        layout.addWidget(QtWidgets.QLabel('PK'), len(self.repo.fields), 0)
+        layout.addWidget(self.table_widgets[-1], len(self.repo.fields), 1)
+        add = QtWidgets.QPushButton('Изменить запись')
+        cancel = QtWidgets.QPushButton('Отменить')
+        cancel.clicked.connect(self.cancel)
+        add.clicked.connect(self.update_click)
+        layout.addWidget(add, len(self.repo.fields)+1, 0)
+        layout.addWidget(cancel, len(self.repo.fields)+1, 1)
+        self.dialog.setLayout(layout)
+        self.dialog.setWindowTitle('Обновить запись')
+        self.dialog.exec()
+
+    def update_click(self) -> None:
+        """
+        Функция, обновление элементов при
+        нажатии на кнопку обновления
+        """
+        add_table = []
+        for element in self.table_widgets:
+            if isinstance(element, QtWidgets.QDateTimeEdit):
+                try:
+                    add_table.append(element.dateTime().toPython())
+                except AttributeError as err:
+                    print(err)
+            else:
+                try:
+                    add_table.append(int(element.text()))
+                except AttributeError:
+                    add_table.append(element.currentText())
+                except ValueError:
+                    add_table.append(element.text())
+        tmp = self.repo.cls(*add_table)
+        print(add_table)
+        print(tmp)
+        self.repo.update(self.repo.cls(*add_table))
+        self.refresh_click()
+        self.dialog.close()
+
